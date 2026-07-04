@@ -9,7 +9,7 @@ from flask import Flask
 # ==================== CONFIGURATION ====================
 FB_PAGE_ID = os.environ.get("FB_PAGE_ID", "1096048570267653")
 FB_PAGE_TOKEN = os.environ.get("FB_PAGE_TOKEN", "EAAYUZCxrcPcQBRwco1ab7DqRoN6ZCPriCRzNN6yoFAhsqZAAvaafRRmZBztty8otazQ2TAmG5xCHoLUGC2WMFPLUK9jjxMYJTytFQktc9rx27JZAWXMQ0VauXlk6LIZAcdqu5rxvPg5snNPgYZCGMCmq0e3I7sPDBGasFKVdbZCM6lmnsspj2J9ZAFgPuEcaaEGGwUgZC1S2k7Moiw0g8BhbbDNnPVCLRMjP3Ms3WuvJVZBrOFPRclhIt3c4IDIM6gNForFZAGnkVu7pkKzklZB3l0Tze")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_HERE")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "Ab8RN6Juov6ymRDzVnsjna0bopBN5cgz81O1Jf-fdHHP1kZnmA")
 # =======================================================
 
 app = Flask(__name__)
