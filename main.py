@@ -6,89 +6,120 @@ import pytz
 from threading import Thread
 from flask import Flask
 
-# ==================== FLASK SERVER FOR RENDER ====================
-app = Flask('')
+# ==================== CONFIGURATION ====================
+FB_PAGE_ID = os.environ.get("FB_PAGE_ID", "1096048570267653")
+FB_PAGE_TOKEN = os.environ.get("FB_PAGE_TOKEN", "EAAYUZCxrcPcQBRwco1ab7DqRoN6ZCPriCRzNN6yoFAhsqZAAvaafRRmZBztty8otazQ2TAmG5xCHoLUGC2WMFPLUK9jjxMYJTytFQktc9rx27JZAWXMQ0VauXlk6LIZAcdqu5rxvPg5snNPgYZCGMCmq0e3I7sPDBGasFKVdbZCM6lmnsspj2J9ZAFgPuEcaaEGGwUgZC1S2k7Moiw0g8BhbbDNnPVCLRMjP3Ms3WuvJVZBrOFPRclhIt3c4IDIM6gNForFZAGnkVu7pkKzklZB3l0Tze")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "Ab8RN6Juov6ymRDzVnsjna0bopBN5cgz81O1Jf-fdHHP1kZnmA")
+# =======================================================
+
+app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Ariyan_bot is Running 24/7 Live on Render!"
+    return "Ariyan_bot is running successfully and active!"
 
-def run_server():
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
-
-def keep_alive():
-    t = Thread(target=run_server)
-    t.start()
-# =================================================================
-
-FB_PAGE_ID = "1096048570267653"
-FB_PAGE_TOKEN = "EAAYUZCxrcPcQBR2uXwrOZAodwqERnWZB74hZCRTKB5o5GJE1fZCYeefWJITtOh0i9gBtHCiucOMmb81ghaf7KZBycOWs8P3nUWEGQqwFZClFpTgqrrnojA1ihf72A9RNsOib6yZCEKr3kJifWxquYFSH9Wqv0r1FDVZBFmbDhwZC3b6ZAg6lwQbrkkyONlyzCHiN1M8y67DiL92CdEYUpEwC1t4oZBRKZC6JW9BX68yr88bblVskZD"
-GEMINI_API_KEY = "AQ.Ab8RN6Juov6ymRDzVnsjna0bopBN5cgz81O1Jf-fdHHP1kZnmA"
-
-def get_current_mood_instruction():
-    bd_timezone = pytz.timezone("Asia/Dhaka")
-    current_hour = datetime.now(bd_timezone).hour
+def get_bangla_mood_prompt():
+    """বাংলাদেশ সময় অনুযায়ী মুড ঠিক করার ফাংশন"""
+    tz = pytz.timezone('Asia/Dhaka')
+    current_hour = datetime.now(tz).hour
     
-    if 6 <= current_hour < 12:
-        return (
-            "Write a beautiful, inspiring, and positive Bengali drama/natok title and a short 2-line motivational Facebook status caption for the page 'Mojar Karigor'. "
-            "At the end, write a 1-sentence English image prompt representing hope, beautiful morning scenery, or positive human emotions (e.g., 'A bright cinematic outdoor portrait of a happy person looking at the sunrise, soft morning light, bokeh effect, 8k resolution')."
-        )
-    elif 12 <= current_hour < 20:
-        return (
-            "Write a hilarious, funny, and comedic Bengali drama/natok title and a short 2-line witty/comedy Facebook status caption that perfectly matches the page name 'Mojar Karigor'. Make people laugh. "
-            "At the end, write a 1-sentence English image prompt representing a funny situation, comedic acting, or expressive funny faces (e.g., 'A humorous cinematic close-up of a funny expressive character, bright comedy lighting, highly detailed, 8k resolution')."
-        )
+    if 5 <= current_hour < 12:
+        return "সকালবেলা নিয়ে একটি সুন্দর আবেগঘন বা অনুপ্রেরণামূলক ফেসবুক পোস্ট এবং একটি বাস্তবসম্মত ইমেজ প্রম্পট তৈরি করো।"
+    elif 12 <= current_hour < 18:
+        return "দুপুর বা বিকেলবেলা নিয়ে অলসতা, আড্ডা বা সুন্দর কোনো অনুভূতি প্রকাশ করে একটি ফেসবুক পোস্ট এবং একটি বাস্তবসম্মত ইমেজ প্রম্পট তৈরি করো।"
     else:
-        return (
-            "Write a deep, emotional, and romantic Bengali drama/natok title and a short 2-line emotional/romantic Facebook status caption for the page 'Mojar Karigor'. "
-            "At the end, write a 1-sentence English image prompt representing a cinematic romantic scene or a dramatic portrait (e.g., 'A cinematic high-resolution dramatic portrait of a romantic couple in the rain, moody lighting, beautiful bokeh effect, 8k resolution, sony a7riv style')."
-        )
+        return "রাত বা গভীর রাতের একাকীত্ব, নীরবতা বা সুন্দর কোনো অনুভূতি নিয়ে একটি ফেসবুক পোস্ট এবং একটি বাস্তবসম্মত ইমেজ প্রম্পট তৈরি করো।"
 
-def generate_ai_text_and_prompt():
-    instruction = get_current_mood_instruction()
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+def generate_content_with_gemini():
+    """গুগল জেমিনি এআই দিয়ে বাংলা ক্যাপশন ও ইমেজ প্রম্পট তৈরি করার ফাংশন"""
+    print("🤖 জেমিনি এআই দিয়ে কন্টেন্ট জেনারেট করা হচ্ছে...")
+    mood_instruction = get_bangla_mood_prompt()
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+    
+    prompt = f"""
+    তুমি একজন দক্ষ সোশ্যাল মিডিয়া ম্যানেজার। {mood_instruction}
+    পোস্টটি অবশ্যই সম্পূর্ণ বাংলায় সাবলীল ভাষায় হতে হবে (কোনো ইংরেজি বা রোমান বাংলা নয়)।
+    পোস্টে সুন্দর কিছু ইমোজি ও মানানসই হ্যাশট্যাগ ব্যবহার করবে।
+    
+    একদম শেষে ছবির জন্য ইংরেজিতে একটি হাই-রেজোলিউশন ও রিয়ালিস্টিক ইমেজ জেনারেশন প্রম্পট লিখে দেবে।
+    
+    আউটপুট ফরম্যাট হুবহু নিচের মতো হতে হবে:
+    CAPTION: [এখানে পুরো বাংলা পোস্টটি লিখবে]
+    IMAGE_PROMPT: [এখানে ছবির জন্য ইংরেজি প্রম্পটটি লিখবে]
+    """
+    
     headers = {'Content-Type': 'application/json'}
+    data = {"contents": [{"parts": [{"text": prompt}]}]}
     
-    prompt_instruction = f"{instruction}\n\nFormat your response exactly like this, separating with '---' and do NOT use **:\nTitle\n---\nPrompt"
-    payload = {"contents": [{"parts": [{"text": prompt_instruction}]}]}
+    response = requests.post(url, headers=headers, json=data)
+    result = response.json()
     
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=30)
-        ai_output = response.json()['candidates'][0]['content']['parts'][0]['text']
-        parts = ai_output.split("---")
-        fb_caption = parts[0].strip().replace("**", "")
-        image_prompt = parts[1].strip() if len(parts) > 1 else "Cinematic drama scene, 8k, bokeh"
-        return fb_caption, image_prompt
-    except:
-        return "🎬 নতুন ধামাকা পোস্ট! মোজার কারিগর পেজের সাথেই থাকুন। ❤️", "Cinematic portrait, bokeh, 8k"
+    text_output = result['candidates'][0]['content']['parts'][0]['text']
+    
+    # ক্যাপশন ও প্রম্পট আলাদা করা
+    caption = text_output.split("CAPTION:")[1].split("IMAGE_PROMPT:")[0].strip()
+    image_prompt = text_output.split("IMAGE_PROMPT:")[1].strip()
+    
+    return caption, image_prompt
 
-def post_ai_content_to_facebook():
-    fb_caption, image_prompt = generate_ai_text_and_prompt()
+def generate_image_with_pollinations(image_prompt):
+    """Pollinations AI দিয়ে ফ্রিতে ছবি জেনারেট করে তার লিংক বের করার ফাংশন"""
+    print("🎨 ছবি জেনারেট করা হচ্ছে...")
+    base_url = "https://image.pollinations.ai/p/"
     encoded_prompt = requests.utils.quote(image_prompt)
-    ai_image_url = f"https://image.pollinations.ai/p/{encoded_prompt}?width=1200&height=800&enhance=true"
-    
-    fb_url = f"https://graph.facebook.com/v25.0/{FB_PAGE_ID}/photos"
-    payload = {'url': ai_image_url, 'caption': fb_caption, 'access_token': FB_PAGE_TOKEN}
-    
-    try:
-        res = requests.post(fb_url, data=payload, timeout=30).json()
-        if "id" in res:
-            print(f"✅ [Ariyan_bot] সফলভাবে পোস্ট করেছে! আইডি: {res['id']}")
-        else:
-            print(f"❌ ফেসবুক এরর: {res.get('error', {}).get('message')}")
-    except Exception as e:
-        print(f"❌ সমস্যা: {e}")
+    image_url = f"{base_url}{encoded_prompt}?width=1080&height=1080&nologo=true"
+    return image_url
 
-def main():
-    print("🚀 Ariyan_bot সার্ভার চালু হচ্ছে...")
-    keep_alive()
+def post_to_facebook(caption, image_url):
+    """ফেসবুক পেজে ছবি ও ক্যাপশন একসাথে পোস্ট করার ফাংশন"""
+    print("📤 ফেসবুকে পোস্ট আপলোড করা হচ্ছে...")
+    url = f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}/photos"
     
+    payload = {
+        'caption': caption,
+        'url': image_url,
+        'access_token': FB_PAGE_TOKEN
+    }
+    
+    response = requests.post(url, data=payload)
+    res_data = response.json()
+    
+    if "id" in res_data:
+        print(f"✅ সফলভাবে ফেসবুক পেজে পোস্ট করা হয়েছে! পোস্ট আইডি: {res_data['id']}")
+    else:
+        print(f"❌ ফেসবুক এরর: {res_data}")
+
+def bot_loop():
+    """৩ ঘণ্টা পর পর রান হওয়ার মূল লুপ"""
+    print("🚀 Ariyan_bot এর ব্যাকগ্রাউন্ড প্রসেস শুরু হলো...")
+    
+    # প্রথমবার রান করার সাথে সাথেই একটি পোস্ট করার চেষ্টা করবে
+    try:
+        caption, img_prompt = generate_content_with_gemini()
+        img_url = generate_image_with_pollinations(img_prompt)
+        post_to_facebook(caption, img_url)
+    except Exception as e:
+        print(f"❌ প্রথম পোস্টে এরর: {e}")
+
     while True:
-        post_ai_content_to_facebook()
-        print("🕒 ৩ ঘণ্টা বিরতি... বট ব্যাকগ্রাউন্ডে সচল আছে।")
+        # ৩ ঘণ্টা অপেক্ষা (৩ ঘণ্টা = ১০৮০০ সেকেন্ড)
+        print("🕒 ৩ ঘণ্টার বিরতি শুরু হলো...")
         time.sleep(10800)
+        
+        try:
+            caption, img_prompt = generate_content_with_gemini()
+            img_url = generate_image_with_pollinations(img_prompt)
+            post_to_facebook(caption, img_url)
+        except Exception as e:
+            print(f"❌ লুপের ভেতর এরর ঘটেছে: {e}")
 
 if __name__ == "__main__":
-    main()
+    # সার্ভার কিল হওয়া আটকাতে ব্যাকগ্রাউন্ড থ্রেড চালু
+    t = Thread(target=bot_loop)
+    t.daemon = True
+    t.start()
+    
+    # রেন্ডার সার্ভার বাইন্ডিং
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
