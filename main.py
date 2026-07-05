@@ -31,16 +31,19 @@ def save_to_history(text):
 
 def generate_ai_content():
     if not GEMINI_API_KEY:
-        print("❌ এরর: রেন্ডারের Environment-এ 'api_key' খুঁজে পাওয়া যায়নি!", flush=True)
+        print("❌ এরর: 'api_key' খুঁজে পাওয়া যায়নি!", flush=True)
         return None
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     
+    # প্রম্পটটি আরও নিখুঁত ও কঠোর করা হলো যাতে ১টিই পোস্ট দেয় এবং অপশন না বানায়
     prompt = (
-        "তুমি একটি ফেসবুক পেজের জন্য কনটেন্ট লিখবে। পেজটি মূলত বাংলা নাটক (Bangla Natok), নাটকের রিভিউ, "
-        "মজার ডায়ালগ এবং আবেগঘন নাটকের সিন নিয়ে। বাংলা নাটকের দর্শক পছন্দ করবে এমন একটি সুন্দর, ইউনিক এবং আকর্ষণীয় "
-        "ক্যাপশন বা স্ট্যাটাস লেখো (২-৩ লাইনের মধ্যে)। সাথে অবশ্যই রিলেভেন্ট হ্যাশট্যাগ (যেমন: #BanglaNatok #Natok) দেবে। "
-        "কোনো ভূমিকা বা বাড়তি কথা ছাড়া শুধু মূল ফেসবুক পোস্টটুকু দেবে।"
+        "তুমি একটি ফেসবুক পেজের জন্য শুধু ১টি একক (single) স্ট্যাটাস বা ক্যাপশন লিখবে। "
+        "পেজটি মূলত বাংলা নাটক (Bangla Natok), নাটকের রিভিউ বা মজার ডায়ালগ নিয়ে। "
+        "কোনোভাবেই 'এখানে কয়েকটি বিকল্প দেওয়া হলো' বা '১, ২, ৩, ৪' এমন কোনো তালিকা বা অপশন তৈরি করবে না। "
+        "ভিন্ন ভিন্ন বিকল্প দেওয়া সম্পূর্ণ নিষিদ্ধ। শুধু ১টি একক আকর্ষণীয় ও রেডিমেড ফেসবুক পোস্ট (২-৩ লাইনের মধ্যে) দেবে। "
+        "সাথে ৩-৪টি রিলেভেন্ট হ্যাশট্যাগ (যেমন: #BanglaNatok #Natok) যুক্ত করবে। "
+        "কোনো ভূমিকা, ইন্ট্রো বা বাড়তি কথা ছাড়া সরাসরি মেইন পোস্টটুকু দেবে।"
     )
     
     headers = {'Content-Type': 'application/json'}
@@ -56,22 +59,27 @@ def generate_ai_content():
             
             if 'candidates' in result:
                 ai_text = result['candidates'][0]['content']['parts'][0]['text'].strip()
-                match_line = ai_text.split("\n")[0][:50].strip()
-                if match_line in history:
-                    print(f"⚠️ জেমিনি পুরাতন পোস্ট তৈরি করেছে! আবার চেষ্টা করা হচ্ছে (Attempt {attempt + 1})...", flush=True)
+                
+                # যদি জেমিনি ভুল করে আবারও তালিকা তৈরি করে, তবে এটি স্কিপ করে আবার ট্রাই করবে
+                if "বিকল্প দেওয়া হলো" in ai_text or "১." in ai_text:
+                    print("⚠️ জেমিনি ভুল করে তালিকা বা বিকল্প তৈরি করেছে! নতুন একক পোস্টের জন্য আবার চেষ্টা করা হচ্ছে...", flush=True)
                     time.sleep(2)
                     continue
+                
+                match_line = ai_text.split("\n")[0][:50].strip()
+                if match_line in history:
+                    print(f"⚠️ জেমিনি পুরাতন পোস্ট তৈরি করেছে! আবার চেষ্টা করা হচ্ছে...", flush=True)
+                    time.sleep(2)
+                    continue
+                    
                 return ai_text
             
             if 'error' in result and result['error'].get('code') == 503:
                 print(f"⚠️ গুগল সার্ভার ব্যস্ত। ১০ সেকেন্ড পর আবার চেষ্টা করা হচ্ছে...", flush=True)
                 time.sleep(10)
                 continue
-            else:
-                print(f"❌ এপিআই অ্যাক্সেস এরর! ডিটেইলস: {result}", flush=True)
-                break
         except Exception as e:
-            print(f"❌ জেমিনি এপিআই কানেকশনে সমস্যা: {e}", flush=True)
+            print(f"❌ জেমিনি এপিআই সমস্যা: {e}", flush=True)
             time.sleep(5)
             
     return None
@@ -102,10 +110,9 @@ def post_to_facebook(message):
         print(f"❌ ফেসবুক কানেকশন এরর: {e}", flush=True)
 
 def auto_post_loop():
-    # রেন্ডার সার্ভার পুরোপুরি রেডি হওয়ার জন্য ৫ সেকেন্ড ওয়েট করবে
     time.sleep(5)
     print("🚀 ১০ ঘণ্টার অটো-পোস্ট লুপ ব্যাকগ্রাউন্ডে চালু হলো...", flush=True)
-    print("📢 বোট চালু হয়েছে, প্রথম পোস্ট ট্রাই করা হচ্ছে...", flush=True)
+    print("📢 বোট চালু হয়েছে, প্রথম একক পোস্ট ট্রাই করা হচ্ছে...", flush=True)
     
     ai_text = generate_ai_content()
     if ai_text:
@@ -117,10 +124,9 @@ def auto_post_loop():
         print("⏰ ১০ ঘণ্টা পূর্ণ হয়েছে! নতুন পোস্ট তৈরি করা হচ্ছে...", flush=True)
         ai_text = generate_ai_content()
         if ai_text:
-            print(f"📝 ஜেমিনির নতুন স্ট্যাটাস:\n\n{ai_text}\n", flush=True)
+            print(f"📝 জেমিনির নতুন স্ট্যাটাস:\n\n{ai_text}\n", flush=True)
             post_to_facebook(ai_text)
 
-# gunicorn এর জন্য থ্রেডটি এখানে হ্যান্ডেল করা হয়েছে
 threading.Thread(target=auto_post_loop, daemon=True).start()
 
 if __name__ == "__main__":
