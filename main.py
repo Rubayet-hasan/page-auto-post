@@ -7,9 +7,13 @@ from threading import Thread
 from flask import Flask
 
 # ==================== CONFIGURATION ====================
-FB_PAGE_ID = os.environ.get("FB_PAGE_ID", "1711935760121284")
-FB_PAGE_TOKEN = os.environ.get("FB_PAGE_TOKEN", "EAAYUZCxrcPcQBR6HUyQXY3EdSEJ5xz6w5yNGPN3lOkPAZB11WQPCWXZCspCJoS5R7o7fxSLYbJlu9ZCuImMpw0UjbwV0d6T2Nu3L6PK0MUTTlmJbVrMTzpNM26wcZAM3tzaPOw4DfdyfWRR0kaZCYu7SWALmb6OeaLW74rArPFJXCf8VZB5Csxs3ILFUrPcT0CZBwoTzfpY8")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AQ.Ab8RN6KDm0FDEDwnh-vAsuzj8nVpvJGO43B92X7i-aBB9WMiaA")
+# আপনার ফেসবুক পেজ আইডি এবং মেটা অ্যাপের তথ্য
+FB_PAGE_ID = "1096048570267653"
+APP_ID = "1711935760121284"              # আপনার মেটা অ্যাপ আইডি এখানে দিন
+APP_SECRET = "01911065"      # আপনার মেটা অ্যাপ সিক্রেট এখানে দিন
+SHORT_TOKEN = "EAAYUZCxrcPcQBRwco1ab7DqRoN6ZCPriCRzNN6yoFAhsqZAAvaafRRmZBztty8otazQ2TAmG5xCHoLUGC2WMFPLUK9jjxMYJTytFQktc9rx27JZAWXMQ0VauXlk6LIZAcdqu5rxvPg5snNPgYZCGMCmq0e3I7sPDBGasFKVdbZCM6lmnsspj2J9ZAFgPuEcaaEGGwUgZC1S2k7Moiw0g8BhbbDNnPVCLRMjP3Ms3WuvJVZBrOFPRclhIt3c4IDIM6gNForFZAGnkVu7pkKzklZB3l0Tze"  # গ্রাফ এক্সপ্লোরার থেকে পাওয়া টোকেন দিন
+
+GEMINI_API_KEY = os.environ.get("AQ.Ab8RN6KDm0FDEDwnh-vAsuzj8nVpvJGO43B92X7i-aBB9WMiaA")
 # =======================================================
 
 app = Flask(__name__)
@@ -17,6 +21,34 @@ app = Flask(__name__)
 @app.route('/')
 def home():
     return "Ariyan_bot is running successfully and active!"
+
+def get_long_lived_page_token():
+    """কোড নিজেই ফেসবুক থেকে আজীবন মেয়াদি পেজ টোকেন বের করে নেবে"""
+    print("🔑 ফেসবুক থেকে দীর্ঘমেয়াদি পেজ টোকেন নেওয়ার চেষ্টা করা হচ্ছে...")
+    try:
+        # ধাপ ১: শর্ট টোকেনকে ৬০ দিনের লং-লাইভ ইউজার টোকেনে রূপান্তর
+        user_url = f"https://graph.facebook.com/v20.0/oauth/access_token?grant_type=fb_exchange_token&client_id={APP_ID}&client_secret={APP_SECRET}&fb_exchange_token={SHORT_TOKEN}"
+        user_res = requests.get(user_url).json()
+        long_user_token = user_res.get('access_token')
+        
+        if not long_user_token:
+            print(f"❌ ইউজার টোকেন রূপান্তর ব্যর্থ: {user_res}")
+            return SHORT_TOKEN
+            
+        # ধাপ ২: লং-লাইভ ইউজার টোকেন দিয়ে আজীবনের পেজ এক্সেস টোকেন নেওয়া
+        page_url = f"https://graph.facebook.com/v20.0/me/accounts?access_token={long_user_token}"
+        page_res = requests.get(page_url).json()
+        
+        if 'data' in page_res:
+            for page in page_res['data']:
+                if str(page['id']) == str(FB_PAGE_ID):
+                    print("✅ আজীবন মেয়াদি পেজ এক্সেস টোকেন সফলভাবে সংগ্রহ করা হয়েছে!")
+                    return page['access_token']
+        print(f"❌ পেজ টোকেন পাওয়া যায়নি, তালিকা: {page_res}")
+        return long_user_token
+    except Exception as e:
+        print(f"❌ টোকেন জেনারেট করতে এরর: {e}")
+        return SHORT_TOKEN
 
 def get_bangla_mood_prompt():
     tz = pytz.timezone('Asia/Dhaka')
@@ -31,6 +63,7 @@ def get_bangla_mood_prompt():
 def generate_content_with_gemini():
     print("🤖 জেমিনি এআই দিয়ে কন্টেন্ট জেনারেট করা হচ্ছে...")
     mood_instruction = get_bangla_mood_prompt()
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     prompt = f"""
     তুমি একজন দক্ষ সোশ্যাল মিডিয়া ম্যানেজার। {mood_instruction}
@@ -42,39 +75,23 @@ def generate_content_with_gemini():
     CAPTION: [এখানে পুরো বাংলা পোস্টটি লিখবে]
     IMAGE_PROMPT: [এখানে ছবির জন্য ইংরেজি প্রম্পটটি লিখবে]
     """
-    
-    # এরর এড়াতে নতুন এবং অল্টারনেটিভ জেমিনি গেটওয়ে ইউআরএল ব্যবহার করা হয়েছে
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-    
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
     
     try:
         response = requests.post(url, headers=headers, json=data)
         result = response.json()
-        
-        if 'candidates' in result:
-            text_output = result['candidates'][0]['content']['parts'][0]['text']
-            caption = text_output.split("CAPTION:")[1].split("IMAGE_PROMPT:")[0].strip()
-            image_prompt = text_output.split("IMAGE_PROMPT:")[1].strip()
-            return caption, image_prompt
-        else:
-            # ব্যাকআপ সিস্টেম যদি এপিআই ইউআরএল কাজ না করে
-            print("⚠️ সরাসরি এপিআই ব্যর্থ, ব্যাকআপ সার্ভার ব্যবহার করা হচ্ছে...")
-            backup_url = f"https://open-api.lycoris.workers.dev/v1/chat/completions"
-            backup_headers = {"Authorization": f"Bearer {GEMINI_API_KEY}", "Content-Type": "application/json"}
-            backup_data = {
-                "model": "gemini-1.5-flash",
-                "messages": [{"role": "user", "content": prompt}]
-            }
-            res = requests.post(backup_url, headers=backup_headers, json=backup_data)
-            text_output = res.json()['choices'][0]['message']['content']
-            caption = text_output.split("CAPTION:")[1].split("IMAGE_PROMPT:")[0].strip()
-            image_prompt = text_output.split("IMAGE_PROMPT:")[1].strip()
-            return caption, image_prompt
+        if 'candidates' not in result:
+            print(f"❌ জেমিনি রেসপন্স এরর: {result}")
+            return None, None
+            
+        text_output = result['candidates'][0]['content']['parts'][0]['text']
+        caption = text_output.split("CAPTION:")[1].split("IMAGE_PROMPT:")[0].strip()
+        image_prompt = text_output.split("IMAGE_PROMPT:")[1].strip()
+        return caption, image_prompt
     except Exception as e:
         print(f"❌ জেমিনি প্রসেসিং এরর: {e}")
-        return "শুভ দিন! আপনাদের সবার সময় সুন্দর কাটুক। ✨ #goodvibes", "A beautiful cinematic dramatic scenery, highly detailed, 8k resolution"
+        return "আজকের দিনটি চমৎকার কাটুক! 🌟 #bangla #post", "A beautiful cinematic dramatic scenery"
 
 def generate_image_with_pollinations(image_prompt):
     print("🎨 ছবি জেনারেট করা হচ্ছে...")
@@ -82,13 +99,13 @@ def generate_image_with_pollinations(image_prompt):
     encoded_prompt = requests.utils.quote(image_prompt)
     return f"{base_url}{encoded_prompt}?width=1080&height=1080&nologo=true"
 
-def post_to_facebook(caption, image_url):
+def post_to_facebook(caption, image_url, token):
     print("📤 ফেসবুকে পোস্ট আপলোড করা হচ্ছে...")
-    url = f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}/photos"
+    url = f"https://graph.facebook.com/v20.0/{FB_PAGE_ID}/photos"
     payload = {
         'caption': caption,
         'url': image_url,
-        'access_token': FB_PAGE_TOKEN
+        'access_token': token
     }
     response = requests.post(url, data=payload)
     res_data = response.json()
@@ -99,10 +116,12 @@ def post_to_facebook(caption, image_url):
 
 def run_bot_task():
     try:
+        # রান হওয়ার সময় প্রতিবার কোড নিজেই তাজা টোকেন জেনারেট করবে
+        dynamic_token = get_long_lived_page_token()
         caption, img_prompt = generate_content_with_gemini()
         if caption and img_prompt:
             img_url = generate_image_with_pollinations(img_prompt)
-            post_to_facebook(caption, img_url)
+            post_to_facebook(caption, img_url, dynamic_token)
     except Exception as e:
         print(f"❌ পোস্টিং টাস্কে এরর: {e}")
 
