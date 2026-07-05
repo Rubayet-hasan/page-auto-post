@@ -4,7 +4,7 @@ from flask import Flask
 
 # ==================== CONFIGURATION ====================
 # এখানে শুধু আপনার জেমিনি কি (Key) বসিয়ে দিন
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_HERE")
+GEMINI_API_KEY = os.environ.get("AQ.Ab8RN6KDm0FDEDwnh-vAsuzj8nVpvJGO43B92X7i-aBB9WMiaA")
 # =======================================================
 
 app = Flask(__name__)
