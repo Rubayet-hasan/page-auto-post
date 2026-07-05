@@ -5,8 +5,8 @@ from flask import Flask
 # ==================== CONFIGURATION ====================
 # রেন্ডারের Environment Variables থেকে সিক্রেট কি-গুলো নেওয়া হচ্ছে
 GEMINI_API_KEY = os.environ.get("api_key")
-FB_PAGE_ID = os.environ.get("fb_page_id")
-FB_ACCESS_TOKEN = os.environ.get("fb_access_token")
+FB_PAGE_ID = os.environ.get("1711935760121284")
+FB_ACCESS_TOKEN = os.environ.get("EAAYUZCxrcPcQBR6HUyQXY3EdSEJ5xz6w5yNGPN3lOkPAZB11WQPCWXZCspCJoS5R7o7fxSLYbJlu9ZCuImMpw0UjbwV0d6T2Nu3L6PK0MUTTlmJbVrMTzpNM26wcZAM3tzaPOw4DfdyfWRR0kaZCYu7SWALmb6OeaLW74rArPFJXCf8VZB5Csxs3ILFUrPcT0CZBwoTzfpY8")
 # =======================================================
 
 app = Flask(__name__)
