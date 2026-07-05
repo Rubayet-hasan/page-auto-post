@@ -19,8 +19,8 @@ def test_gemini():
         print("❌ এরর: রেন্ডারের Environment-এ 'api_key' খুঁজে পাওয়া যায়নি!")
         return
 
-    # অফিশিয়াল এবং ওয়ার্কিং জেমিনি এন্ডপয়েন্ট (v1)
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # জেমিনি ১.৫ ফ্ল্যাশের জন্য সঠিক v1beta ইউআরএল এন্ডপয়েন্ট
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     prompt = "বাংলাদেশ নিয়ে খুব সুন্দর ৪ লাইনের একটি কবিতা লেখো।"
     headers = {'Content-Type': 'application/json'}
@@ -38,7 +38,7 @@ def test_gemini():
             print(poem)
             print("======================================\n")
         else:
-            print(f"❌ জেমিনি রেসপন্স এরর! মেসেজ: {result}")
+            print(f"❌ জেমিনি রেসপন্স এরর! সম্পূর্ণ মেসেজ: {result}")
     except Exception as e:
         print(f"❌ কানেকশন এরর: {e}")
 
