@@ -5,15 +5,15 @@ from flask import Flask
 # ==================== CONFIGURATION ====================
 # রেন্ডারের Environment Variables থেকে সিক্রেট কি-গুলো নেওয়া হচ্ছে
 GEMINI_API_KEY = os.environ.get("api_key")
-FB_PAGE_ID = os.environ.get("1711935760121284")
-FB_ACCESS_TOKEN = os.environ.get("EAAYUZCxrcPcQBR6HUyQXY3EdSEJ5xz6w5yNGPN3lOkPAZB11WQPCWXZCspCJoS5R7o7fxSLYbJlu9ZCuImMpw0UjbwV0d6T2Nu3L6PK0MUTTlmJbVrMTzpNM26wcZAM3tzaPOw4DfdyfWRR0kaZCYu7SWALmb6OeaLW74rArPFJXCf8VZB5Csxs3ILFUrPcT0CZBwoTzfpY8")
+FB_PAGE_ID = os.environ.get("fb_page_id")
+FB_ACCESS_TOKEN = os.environ.get("fb_access_token")
 # =======================================================
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Facebook Auto-Post Bot is Running!"
+    return "Facebook Auto-Post Bot is Running Successfully!"
 
 # ১. জেমিনি থেকে কনটেন্ট জেনারেট করার ফাংশন
 def generate_ai_content():
@@ -21,9 +21,10 @@ def generate_ai_content():
         print("❌ এরর: রেন্ডারের Environment-এ 'api_key' খুঁজে পাওয়া যায়নি!")
         return None
 
+    # জেমিনি ২.৫ ফ্ল্যাশ মডেলের সঠিক অফিশিয়াল এন্ডপয়েন্ট
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     
-    # এখানে আপনি বোটকে যা লিখতে বলবেন, সে তাই লিখে পোস্ট করবে
+    # বোটকে দেওয়া প্রম্পট
     prompt = "ফেসবুক পেজের জন্য একটি সুন্দর শিক্ষণীয় বা মোটিভেশনাল স্ট্যাটাস লেখো (২-৩ লাইনের মধ্যে, সাথে রিলেভেন্ট হ্যাশট্যাগ)। কোনো বাড়তি কথা বা ইন্ট্রো ছাড়া শুধু মেইন পোস্টটুকু দেবে।"
     
     headers = {'Content-Type': 'application/json'}
@@ -34,6 +35,8 @@ def generate_ai_content():
         result = response.json()
         if 'candidates' in result:
             return result['candidates'][0]['content']['parts'][0]['text']
+        else:
+            print(f"❌ জেমিনি রেসপন্স এরর! সম্পূর্ণ মেসেজ: {result}")
     except Exception as e:
         print(f"❌ জেমিনি থেকে কনটেন্ট তৈরিতে সমস্যা: {e}")
     return None
@@ -42,6 +45,7 @@ def generate_ai_content():
 def post_to_facebook(message):
     if not FB_PAGE_ID or not FB_ACCESS_TOKEN:
         print("❌ এরর: ফেসবুক Page ID বা Access Token সেট করা নেই!")
+        print("দয়া করে রেন্ডারের Environment ট্যাবে fb_page_id এবং fb_access_token সেট করুন।")
         return
 
     # ফেসবুক গ্রাফ এপিআই ইউআরএল
@@ -56,13 +60,15 @@ def post_to_facebook(message):
         result = response.json()
         
         if 'id' in result:
+            print("\n======================================")
             print(f"✅ ফেসবুকে সফলভাবে পোস্ট হয়েছে! পোস্ট আইডি: {result['id']}")
+            print("======================================\n")
         else:
             print(f"❌ ফেসবুক পোস্ট এরর! মেসেজ: {result}")
     except Exception as e:
         print(f"❌ ফেসবুকের সাথে কানেক্ট করা যায়নি: {e}")
 
-# বোট চালু হলেই একটি টেস্ট পোস্ট ফেসবুক পেজে চলে যাবে
+# বোট চালু হলেই টেস্ট রান শুরু হবে
 print("🚀 ফেসবুক অটো-পোস্ট বোট স্টার্ট হচ্ছে...")
 ai_text = generate_ai_content()
 if ai_text:
