@@ -31,7 +31,7 @@ def get_bangla_mood_prompt():
 def generate_content_with_gemini():
     print("🤖 জেমিনি এআই দিয়ে কন্টেন্ট জেনারেট করা হচ্ছে...")
     mood_instruction = get_bangla_mood_prompt()
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     prompt = f"""
     তুমি একজন দক্ষ সোশ্যাল মিডিয়া ম্যানেজার। {mood_instruction}
