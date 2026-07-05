@@ -3,7 +3,7 @@ import requests
 from flask import Flask
 
 # ==================== CONFIGURATION ====================
-# রেন্ডারের এনভায়রনমেন্ট থেকে সরাসরি 'api_key' ভ্যারিয়েবলটি রিড করা হচ্ছে
+# রেন্ডারের Environment Variables থেকে সরাসরি চাবিটি রিড করা হচ্ছে
 GEMINI_API_KEY = os.environ.get("api_key")
 # =======================================================
 
@@ -11,17 +11,18 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Gemini AI Production Server is running!"
+    return "Gemini AI Production Server is running successfully!"
 
 def test_gemini():
     print("🤖 জেমিনি এআই টেস্ট শুরু হচ্ছে...")
     
     if not GEMINI_API_KEY:
         print("❌ এরর: রেন্ডারের Environment-এ 'api_key' খুঁজে পাওয়া যায়নি!")
-        print("দয়া করে রেন্ডারের Environment ট্যাবে Key: api_key এবং Value: [আপনার চাবি] সেট করুন।")
         return
 
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # অফিশিয়াল v1beta এন্ডপয়েন্ট যা gemini-1.5-flash মডেলটিকে পারফেক্টলি সাপোর্ট করে
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    
     prompt = "বাংলাদেশ নিয়ে খুব সুন্দর ৪ লাইনের একটি কবিতা লেখো।"
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
