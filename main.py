@@ -3,24 +3,25 @@ import requests
 from flask import Flask
 
 # ==================== CONFIGURATION ====================
-# এখানে আপনার আসল চাবিটিকে একদম উল্টো (Reverse) করে রাখা হয়েছে
-# গিটহাবের রোবট এটিকে কোনোদিনই ধরতে পারবে না!
-REVERSED_KEY = "QbZkxNGBCBdiVpLEBajuEYa5RS-71cA6xEJf0NfW3GL6NRbA.ySzazIA"
-
-# কোডটি রান হওয়ামাত্রই এটি চাবিটিকে আবার সোজা করে নেবে
-GEMINI_API_KEY = REVERSED_KEY[::-1]
+# রেন্ডারের এনভায়রনমেন্ট থেকে সরাসরি 'api_key' ভ্যারিয়েবলটি রিড করা হচ্ছে
+GEMINI_API_KEY = os.environ.get("api_key")
 # =======================================================
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Gemini AI Reverse-Key Test Server is running!"
+    return "Gemini AI Production Server is running!"
 
 def test_gemini():
     print("🤖 জেমিনি এআই টেস্ট শুরু হচ্ছে...")
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
+    if not GEMINI_API_KEY:
+        print("❌ এরর: রেন্ডারের Environment-এ 'api_key' খুঁজে পাওয়া যায়নি!")
+        print("দয়া করে রেন্ডারের Environment ট্যাবে Key: api_key এবং Value: [আপনার চাবি] সেট করুন।")
+        return
+
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     prompt = "বাংলাদেশ নিয়ে খুব সুন্দর ৪ লাইনের একটি কবিতা লেখো।"
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -41,6 +42,7 @@ def test_gemini():
     except Exception as e:
         print(f"❌ কানেকশন এরর: {e}")
 
+# সার্ভার স্টার্ট হলেই টেস্ট রান হবে
 test_gemini()
 
 if __name__ == "__main__":
