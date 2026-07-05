@@ -3,22 +3,22 @@ import requests
 from flask import Flask
 
 # ==================== CONFIGURATION ====================
-# এখানে শুধু আপনার জেমিনি কি (Key) বসিয়ে দিন
-GEMINI_API_KEY = os.environ.get("AQ.Ab8RN6KDm0FDEDwnh-vAsuzj8nVpvJGO43B92X7i-aBB9WMiaA")
+# আপনার স্ক্রিনশটের চাবিটি (API Key) নিচে নিখুঁতভাবে বসানো হয়েছে
+GEMINI_API_KEY = "AIzaSyAQ.Ab8RN6LG3WfN0fJEx6Ac17-SR5YaEuDajBELpVidBCBGNkxZbQ"
 # =======================================================
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Gemini AI Test Server is running!"
+    return "Gemini AI Test Server is running successfully!"
 
 def test_gemini():
     print("🤖 জেমিনি এআই টেস্ট শুরু হচ্ছে...")
     url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
-    # জেমিনিকে একটি সহজ বাংলা কবিতা লিখতে বলা হলো
-    prompt = "বাংলাদেশ নিয়ে খুব সুন্দর ৪ লাইনের একটি বাংলা কবিতা লেখো।"
+    # একটি সহজ টেস্ট প্রম্পট
+    prompt = "বাংলাদেশ নিয়ে খুব সুন্দর ৪ লাইনের একটি কবিতা লেখো।"
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
     
@@ -26,7 +26,7 @@ def test_gemini():
         response = requests.post(url, headers=headers, json=data)
         result = response.json()
         
-        # যদি চাবি ঠিক থাকে, তবে জেমিনি সুন্দর আউটপুট দেবে
+        # যদি চাবি সঠিক থাকে তবে এখানে কবিতা প্রিন্ট হবে
         if 'candidates' in result:
             poem = result['candidates'][0]['content']['parts'][0]['text']
             print("\n======================================")
@@ -35,11 +35,11 @@ def test_gemini():
             print(poem)
             print("======================================\n")
         else:
-            print(f"❌ জেমিনি চাবিতে সমস্যা আছে! মেসার্জ: {result}")
+            print(f"❌ জেমিনি রেসপন্স এরর! মেসেজ: {result}")
     except Exception as e:
         print(f"❌ কানেকশন এরর: {e}")
 
-# সার্ভার চালু হওয়ার সাথে সাথেই টেস্ট রান হবে
+# সার্ভার স্টার্ট হলেই প্রথমবার টেস্ট রান হবে
 test_gemini()
 
 if __name__ == "__main__":
