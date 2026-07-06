@@ -98,11 +98,11 @@ def auto_post_scheduler():
         print("😴 ১০ ঘণ্টার জন্য বোট ঘুমাচ্ছে...")
         time.sleep(36000)
 
-if __name__ == "__main__":
-    # ব্যাকগ্রাউন্ডে টাইমার চালু করার জন্য থ্রেড তৈরি করা হলো
-    scheduler_thread = threading.Thread(target=auto_post_scheduler, daemon=True)
-    scheduler_thread.start()
+# ⚠️ গুনিকর্ন (Gunicorn) যেন থ্রেডটি চালু করতে পারে, তাই এটিকে মেইন ব্লকের বাইরে রাখা হলো
+scheduler_thread = threading.Thread(target=auto_post_scheduler, daemon=True)
+scheduler_thread.start()
 
+if __name__ == "__main__":
     # রেন্ডারের ডিফল্ট পোর্ট রিড করা হচ্ছে
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
