@@ -24,7 +24,7 @@ def generate_ai_content():
         return None
 
     # জেমিনি ২.৫ ফ্ল্যাশ মডেলের অফিশিয়াল এন্ডপয়েন্ট
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     # বোটকে দেওয়া প্রম্পট
     prompt = "ফেসবুক পেজের জন্য একটি সুন্দর শিক্ষণীয় বা মোтивнойেশনাল স্ট্যাটাস লেখো (২-৩ লাইনের মধ্যে, সাথে রিলেভেন্ট হ্যাশট্যাগ)। কোনো বাড়তি কথা বা ইন্ট্রো ছাড়া শুধু মেইন পোস্টটুকু দেবে।"
